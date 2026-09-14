@@ -80,7 +80,7 @@ tensor inspector offers **value preview for F32/F16 tensors** and client-side bl
 
 > [!NOTE]
 > **K-Quant Approximation Disclaimer (DOC-05):**
-> Dequantization algorithms for K-quant formats (`Q4_K`, `Q5_K`, `Q8_K`) in `lib/gguf/dequant.ts` use simplified block scale reconstructions optimized for fast in-browser WebGL visualization. While sufficient for visual pointcloud sampling and histogram previews, displayed float values represent approximate reconstructions rather than bit-exact full precision values. The live-model backend source (`GET /architecture`) provides exact full-precision values.
+> Dequantization algorithms for K-quant formats (`Q4_K`, `Q5_K`, `Q8_K`) in `lib/gguf/dequant.ts` use simplified block scale reconstructions optimized for fast in-browser WebGL visualization. While sufficient for visual pointcloud sampling and histogram previews, displayed float values represent approximate reconstructions rather than bit-exact full precision values. For full-precision numeric weights, use the live-model backend engine (`GET /architecture`).
 
 ## Verified against real files
 
