@@ -85,8 +85,7 @@ Full evidence, five independent verification scripts, and the CI regression gate
 
 - Quantized GGUF inference is real, but `llama.cpp` doesn't expose per-layer activations —
   layer lighting is disabled there rather than faked.
-- Attention weight ≠ causal proof. High attention mass is a signal, not evidence the model
-  *needed* that token ([docs/visual-mapping.md](docs/visual-mapping.md#causality-warning)).
+- **Attention weight ≠ causal proof**: High attention mass describes how attention mass is mathematically distributed during a forward pass, but does **not** constitute causal necessity ([docs/visual-mapping.md](docs/visual-mapping.md#causality-warning)). High attention mass is a signal, not proof the model *needed* that token.
 - Per-layer timings are real wall-clock, but unsynchronized on MPS/CUDA — treated as a rough
   signal, badged `PROXY · NOT MS` when we can't back it, never dressed up as precise ms.
 
