@@ -21,26 +21,25 @@ import urllib.parse
 
 
 TRACE_API = "/trace"
+ANALYZE_API = "/analyze"
 
 
-def capture_trace(base_url: str, prompt: str, max_new_tokens: int = 10, 
+def capture_trace(base_url: str, prompt: str = None, max_new_tokens: int = 10, 
                   top_k: int = 10, timeout: int = 60) -> dict:
-    """Send a generation request with tracing enabled and return the recorded trace."""
-    url = urllib.parse.urljoin(base_url.rstrip("/") + "/", TRACE_API.lstrip("/"))
-    
-    body = json.dumps({
-        "prompt": prompt,
-        "max_new_tokens": max_new_tokens,
-        "top_k": top_k,
-        "trace": True,
-    }).encode("utf-8")
-    
-    req = urllib.request.Request(
-        url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    """Fetch recorded trace via GET /trace or request analysis via POST /analyze."""
+    base_clean = base_url.rstrip("/")
+    if prompt:
+        url = f"{base_clean}{ANALYZE_API}"
+        body = json.dumps({"sentence": prompt, "top_k": top_k}).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+    else:
+        url = f"{base_clean}{TRACE_API}"
+        req = urllib.request.Request(url, method="GET")
     
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
