@@ -1,5 +1,7 @@
 import unittest
+
 import torch
+
 from backend.app.model import GenerationState
 
 

@@ -114,29 +114,25 @@ class GenerationState:
         """Keep only the last ``keep`` positions of a KV cache."""
         if self.past_key_values is None:
             return
-        if hasattr(self.past_key_values, "key_cache") and getattr(self.past_key_values, "key_cache"):
-            key_cache = getattr(self.past_key_values, "key_cache")
+        if isinstance(self.past_key_values, DynamicCache) and self.past_key_values.key_cache:
+            key_cache = self.past_key_values.key_cache
             nk = int(key_cache[0].shape[-2])
             if nk <= keep:
                 return
-            try:
-                from transformers import DynamicCache
-                dyn = DynamicCache()
-            except Exception:
-                try:
-                    dyn = type(self.past_key_values)()
-                except Exception:
-                    dyn = self.past_key_values
-                    dyn.key_cache = [t[..., -keep:, :] for t in key_cache]
-                    dyn.value_cache = [t[..., -keep:, :] for t in getattr(self.past_key_values, "value_cache")]
-                    if hasattr(dyn, "_seen_tokens"):
-                        dyn._seen_tokens = keep
-                    self.past_key_values = dyn
-                    return
+            dyn = DynamicCache()
             dyn.key_cache = [t[..., -keep:, :] for t in key_cache]
-            dyn.value_cache = [t[..., -keep:, :] for t in getattr(self.past_key_values, "value_cache")]
+            dyn.value_cache = [t[..., -keep:, :] for t in self.past_key_values.value_cache]
             if hasattr(dyn, "_seen_tokens"):
                 dyn._seen_tokens = keep
+            self.past_key_values = dyn
+        elif hasattr(self.past_key_values, "key_cache") and self.past_key_values.key_cache:
+            key_cache = self.past_key_values.key_cache
+            nk = int(key_cache[0].shape[-2])
+            if nk <= keep:
+                return
+            dyn = type(self.past_key_values)()
+            dyn.key_cache = [t[..., -keep:, :] for t in key_cache]
+            dyn.value_cache = [t[..., -keep:, :] for t in self.past_key_values.value_cache]
             self.past_key_values = dyn
         elif (
             isinstance(self.past_key_values, tuple)
