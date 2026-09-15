@@ -1,5 +1,60 @@
 # Changelog
 
+## [0.3.0](https://github.com/ManoShruthiS/Token-Print/compare/token-print-backend-v0.2.0...token-print-backend-v0.3.0) (2026-09-15)
+
+
+### Features
+
+* activate real activation patching between two prompts ([#75](https://github.com/ManoShruthiS/Token-Print/issues/75)) ([36f3d5f](https://github.com/ManoShruthiS/Token-Print/commit/36f3d5f006a56f593761d643525ec8b654cf6ed8))
+* **audit:** implement Track A docs & contributor funnel and Track B P0 engineering & provenance system ([ba58030](https://github.com/ManoShruthiS/Token-Print/commit/ba580308594a64ee7f63ddf8635de041a67d28c4))
+* **backend:** CORS for deployed origins + Oracle ARM bootstrap script ([94b82cd](https://github.com/ManoShruthiS/Token-Print/commit/94b82cd32b33377ee42eeae3ceb01a814fc91983))
+* **backend:** FastAPI endpoints — /analyze, /architecture, WS generation ([dcf0cea](https://github.com/ManoShruthiS/Token-Print/commit/dcf0ceaa72ab1f2b4275c132b25e35c4e8745160))
+* **backend:** implement KV cache state machine for speculative decoding (ENG-04) ([#268](https://github.com/ManoShruthiS/Token-Print/issues/268)) ([5d61e31](https://github.com/ManoShruthiS/Token-Print/commit/5d61e3162e6687ede2eaa4194239ea6041c54403))
+* **backend:** implement ModelAdapter capability abstraction (ENG-14) ([#159](https://github.com/ManoShruthiS/Token-Print/issues/159)) ([b903f0e](https://github.com/ManoShruthiS/Token-Print/commit/b903f0ee3d5a4fab74789cc3eaeb4e8f4ffe4186))
+* **backend:** real Qwen model engine (attention, hidden states, generation) ([9ee7ab4](https://github.com/ManoShruthiS/Token-Print/commit/9ee7ab4b2283ffb01a6967678b43b0d8cd576498))
+* **debugger:** real per-layer timing readout in HUD ([#18](https://github.com/ManoShruthiS/Token-Print/issues/18)) ([a2beafd](https://github.com/ManoShruthiS/Token-Print/commit/a2beafd310ef027db1e8cabcbfa37605440489e9))
+* **decoding:** speculative, sliding-window, and long-context needle modes ([#86](https://github.com/ManoShruthiS/Token-Print/issues/86)) ([fd5cb05](https://github.com/ManoShruthiS/Token-Print/commit/fd5cb05be0ae4a7dec29fceb0f57474c0c1e408b))
+* **generation:** workspace redesign + real sampling decode + custom-domain deploy ([bdaca41](https://github.com/ManoShruthiS/Token-Print/commit/bdaca41085d51fc53f322dc53e2b96f39f294bd8))
+* **inference:** stream real KV-cache phase (prefill vs decode) per token ([7ce98fb](https://github.com/ManoShruthiS/Token-Print/commit/7ce98fb455ab90fc59c3464685bf4e1d6b826caa))
+* MoE routing visualization with real router capture ([#83](https://github.com/ManoShruthiS/Token-Print/issues/83)) ([cc57a91](https://github.com/ManoShruthiS/Token-Print/commit/cc57a91c663824cd349728e39ece8522cadc2367))
+* **rag:** causal activation patching interventions for retrieved context ([20d27f5](https://github.com/ManoShruthiS/Token-Print/commit/20d27f551528c3e1b90abdaec2bd88f4a4455899)), closes [#115](https://github.com/ManoShruthiS/Token-Print/issues/115)
+* real quantized GGUF execution via llama.cpp ([#85](https://github.com/ManoShruthiS/Token-Print/issues/85)) ([6f3b7e7](https://github.com/ManoShruthiS/Token-Print/commit/6f3b7e759ee8022c2c9ef1d66b5f7cc1b8d2d558))
+* v2 visualization engine, inference backends, and test suite ([046e43c](https://github.com/ManoShruthiS/Token-Print/commit/046e43c04169cdfb3f1824078d7c1a0054b50eda))
+* vision-transformer and embedding-model modes ([#87](https://github.com/ManoShruthiS/Token-Print/issues/87)) ([92e9c41](https://github.com/ManoShruthiS/Token-Print/commit/92e9c4145f2bcbe680a6f738667df87f663d1931))
+
+
+### Bug Fixes
+
+* **backend:** correct logit_lens schema nesting for /analyze ([#92](https://github.com/ManoShruthiS/Token-Print/issues/92)) ([698bb52](https://github.com/ManoShruthiS/Token-Print/commit/698bb522a37226a0b35ecf120a27de33ce95051e))
+* **backend:** enforce GGUF upload size limit and cleanup (ENG-09) ([8143199](https://github.com/ManoShruthiS/Token-Print/commit/8143199fde0ca47817fee4cf22c885d96ac5af22))
+* **backend:** repair corrupt encoding of requirements-gguf.txt ([#229](https://github.com/ManoShruthiS/Token-Print/issues/229)) ([d0be661](https://github.com/ManoShruthiS/Token-Print/commit/d0be66177c2cf616108a87bab5c87c3fb9fbf796)), closes [#187](https://github.com/ManoShruthiS/Token-Print/issues/187)
+* **backend:** surface GGUF_ENGINE_AVAILABLE flag and metadata-only mode ([#228](https://github.com/ManoShruthiS/Token-Print/issues/228)) ([3454d06](https://github.com/ManoShruthiS/Token-Print/commit/3454d0615b68bc04fa3b810e6bf78a6234c56411)), closes [#193](https://github.com/ManoShruthiS/Token-Print/issues/193)
+* **ci:** fix nightly verification dependencies and test suite mocking ([#244](https://github.com/ManoShruthiS/Token-Print/issues/244)) ([2edbf98](https://github.com/ManoShruthiS/Token-Print/commit/2edbf988528e05c64359ffcf7eebb8dcc6596306))
+* **ci:** handle read-only permissions on fork PRs and resolve ruff lints ([e1aa7e7](https://github.com/ManoShruthiS/Token-Print/commit/e1aa7e77a0794aec6ee61404ae6ae27876d0ba5d))
+* **ci:** pin smoke-test deps and clean ruff imports ([25b1c7c](https://github.com/ManoShruthiS/Token-Print/commit/25b1c7c141301aee3cbca32ce739bee5ac4c971d))
+* **ci:** repair branch protection checks, pin ruff, auto-update contributors ([b7e8a0c](https://github.com/ManoShruthiS/Token-Print/commit/b7e8a0c57f0b337e963aa1f54e2453ed9230de9c))
+* **ci:** repair branch protection checks, pin ruff, auto-update contributors ([b7e8a0c](https://github.com/ManoShruthiS/Token-Print/commit/b7e8a0c57f0b337e963aa1f54e2453ed9230de9c))
+* **ci:** repair required checks, pin ruff, lint backend tests, gate dependabot ([91349ab](https://github.com/ManoShruthiS/Token-Print/commit/91349ab14e5e6eb7b9eacb898df510bb064b8d93))
+* enable README contributor auto-update ([#221](https://github.com/ManoShruthiS/Token-Print/issues/221)) ([237a48e](https://github.com/ManoShruthiS/Token-Print/commit/237a48e7ba952ccf2f40c538436ba268be54766d))
+* **lint:** remove shebang from activation_patch_rag.py to satisfy Ruff EXE001 ([0f6eff6](https://github.com/ManoShruthiS/Token-Print/commit/0f6eff6c08c885a2cf7b69b84a40c778b967e871))
+* resolve frontend type-check build failures and sync CI Node version ([86d9771](https://github.com/ManoShruthiS/Token-Print/commit/86d9771cc551216e4458ca3b04d8d4c176b40e90))
+* route isolation + HF Model Explorer client-side fallback ([#269](https://github.com/ManoShruthiS/Token-Print/issues/269)) ([f69e2c9](https://github.com/ManoShruthiS/Token-Print/commit/f69e2c9ede97dbe7e72fdb19b40c85a5e1a08618))
+* satisfy backend lint on v2 HF endpoints ([37c0f2c](https://github.com/ManoShruthiS/Token-Print/commit/37c0f2cc0cbce93ef828c36ca4669b726d274430))
+* **security:** add SSRF protection for remote image loading (ENG-10) ([000817c](https://github.com/ManoShruthiS/Token-Print/commit/000817c18a377d354049b80e7cc51d418e2b9e8e))
+* **security:** resolve all CodeQL alerts (taint tracking, ineffectual await, unused T) ([4f78a60](https://github.com/ManoShruthiS/Token-Print/commit/4f78a60a42a0352f3a7f965e6c8e337e963d820d))
+* **security:** resolve all open CodeQL alerts (path injection, empty except, unused vars) ([d6d2cad](https://github.com/ManoShruthiS/Token-Print/commit/d6d2cad68d0ad9d3c82e7988f7d213197dbc83fe))
+* **security:** resolve CodeQL security alerts (path traversal, log injection, unused imports/variables) ([073c3a8](https://github.com/ManoShruthiS/Token-Print/commit/073c3a80c4a4c2932a0b3b35bcacd1a9af0bf15f))
+* **security:** resolve final CodeQL alerts (valid_map lookup, await worker_task) ([7e67ecf](https://github.com/ManoShruthiS/Token-Print/commit/7e67ecfbf9d3bd0931b9e76d7589313f5e853af9))
+* **security:** resolve ineffectual await alert via asyncio.gather ([d80ae3d](https://github.com/ManoShruthiS/Token-Print/commit/d80ae3de1febbeb23aada9c7abf0dd56e7754bfa))
+* **security:** restrict remote Hugging Face model lookup & add LRU cache (ENG-11) ([57a9dd8](https://github.com/ManoShruthiS/Token-Print/commit/57a9dd8ce49fe18c009feb8d485857d1ad773676))
+* **security:** satisfy CodeQL ssrf + log-injection queries (SEC-01) ([6fce234](https://github.com/ManoShruthiS/Token-Print/commit/6fce23436320246e72084b26499d5967b8688406))
+* visual regression workflow infra + /analyze crash; make suite non-blocking ([ac7662b](https://github.com/ManoShruthiS/Token-Print/commit/ac7662bec50a218ca930d9dd2ac9528973bedec5))
+
+
+### Documentation
+
+* **gguf:** update GGUF setup and add requirements-gguf.txt (DOC-04) ([d84a46b](https://github.com/ManoShruthiS/Token-Print/commit/d84a46b3755eda4bdfaf1b39ac4a9afdd2c5b016))
+
 ## [0.2.0](https://github.com/Sudharsanselvaraj/Token-Print/compare/token-print-backend-v0.1.0...token-print-backend-v0.2.0) (2026-09-13)
 
 
