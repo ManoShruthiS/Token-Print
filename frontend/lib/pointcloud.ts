@@ -29,6 +29,17 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   return [f(0), f(8), f(4)];
 }
 
+/** Deterministic pseudo-random number generator (Mulberry32) */
+export function createPrng(seed: number) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function depthOf(t: TensorInfo, numLayers: number): number {
   if (t.layer != null) return t.layer + 1;
   if (t.role === "embedding" || t.role === "position") return 0;
@@ -77,6 +88,7 @@ export function buildPointCloud(
 
   const zc = (maxDepth * DZ) / 2;
   let ptr = 0;
+  const rng = createPrng(42);
 
   for (const d of depths) {
     const idxs = byDepth.get(d)!;
@@ -105,11 +117,11 @@ export function buildPointCloud(
       const r = Math.floor(p / cols);
       const fx = cols > 1 ? c / (cols - 1) : 0.5; // 0..1 across width
       const o = ptr * 3;
-      positions[o] = (fx - 0.5) * PW + (Math.random() - 0.5) * (PW / cols) * 0.6;
+      positions[o] = (fx - 0.5) * PW + (rng() - 0.5) * (PW / cols) * 0.6;
       positions[o + 1] =
         (r / Math.max(1, rows - 1) - 0.5) * PH +
-        (Math.random() - 0.5) * (PH / rows) * 0.6;
-      positions[o + 2] = z + (Math.random() - 0.5) * 0.8;
+        (rng() - 0.5) * (PH / rows) * 0.6;
+      positions[o + 2] = z + (rng() - 0.5) * 0.8;
 
       // Which tensor owns this column?
       let ti = bounds[bounds.length - 1].ti;

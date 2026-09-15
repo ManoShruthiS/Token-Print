@@ -10,7 +10,7 @@ import {
 } from "three";
 
 import { useStore } from "@/lib/store";
-import { buildPointCloud } from "@/lib/pointcloud";
+import { buildPointCloud, createPrng } from "@/lib/pointcloud";
 
 /**
  * A soft radial sprite so each point reads as a gentle disc with a bright core
@@ -60,7 +60,8 @@ export default function TensorCloud() {
     // grain instead of a perfectly uniform stipple.
     const n = cloud.count;
     const scale = new Float32Array(n);
-    for (let i = 0; i < n; i++) scale[i] = 0.7 + Math.random() * 0.55;
+    const rng = createPrng(1337);
+    for (let i = 0; i < n; i++) scale[i] = 0.7 + rng() * 0.55;
     g.setAttribute("aScale", new BufferAttribute(scale, 1));
     return g;
   }, [cloud]);
