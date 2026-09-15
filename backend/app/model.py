@@ -98,6 +98,73 @@ def _pick_device() -> str:
     return "cpu"
 
 
+class GenerationState:
+    """State machine for tracking KV cache and sequence length during text generation.
+
+    Handles KV cache truncation for sliding-window attention and cleanly rolls back
+    unaccepted candidate draft token entries from the key/value cache during
+    speculative decoding verification.
+    """
+
+    def __init__(self, past_key_values=None, positions_done: int = 0):
+        self.past_key_values = past_key_values
+        self.positions_done = positions_done
+
+    def trim_cache(self, keep: int) -> None:
+        """Keep only the last ``keep`` positions of a KV cache."""
+        if self.past_key_values is None:
+            return
+        if hasattr(self.past_key_values, "key_cache") and getattr(self.past_key_values, "key_cache"):
+            key_cache = getattr(self.past_key_values, "key_cache")
+            nk = int(key_cache[0].shape[-2])
+            if nk <= keep:
+                return
+            try:
+                from transformers import DynamicCache
+                dyn = DynamicCache()
+            except Exception:
+                try:
+                    dyn = type(self.past_key_values)()
+                except Exception:
+                    dyn = self.past_key_values
+                    dyn.key_cache = [t[..., -keep:, :] for t in key_cache]
+                    dyn.value_cache = [t[..., -keep:, :] for t in getattr(self.past_key_values, "value_cache")]
+                    if hasattr(dyn, "_seen_tokens"):
+                        dyn._seen_tokens = keep
+                    self.past_key_values = dyn
+                    return
+            dyn.key_cache = [t[..., -keep:, :] for t in key_cache]
+            dyn.value_cache = [t[..., -keep:, :] for t in getattr(self.past_key_values, "value_cache")]
+            if hasattr(dyn, "_seen_tokens"):
+                dyn._seen_tokens = keep
+            self.past_key_values = dyn
+        elif (
+            isinstance(self.past_key_values, tuple)
+            and self.past_key_values
+            and isinstance(self.past_key_values[0], tuple)
+        ):
+            self.past_key_values = tuple(
+                tuple(v[..., -keep:, :] if v is not None else v for v in t)
+                for t in self.past_key_values
+            )
+
+    def rollback_speculative_drafts(self, accepted_k: int, draft_gamma: int) -> None:
+        """Roll back KV cache for unaccepted speculative draft tokens.
+
+        When `draft_gamma` draft tokens are evaluated in the verification pass,
+        `vout.past_key_values` contains KV entries for all `draft_gamma` draft tokens.
+        If `accepted_k < draft_gamma`, the unaccepted `(draft_gamma - accepted_k)` draft
+        entries are trimmed so rejected draft tokens do not pollute the KV cache.
+        """
+        if self.past_key_values is None or accepted_k >= draft_gamma:
+            return
+        rejected_count = draft_gamma - accepted_k
+        target_len = max(0, self.positions_done - rejected_count)
+        self.trim_cache(target_len)
+        self.positions_done = target_len
+
+
+
 class TokenizedTooLong(ValueError):
     """Raised when the input exceeds the configured token cap."""
 
@@ -1067,36 +1134,11 @@ class ModelEngine:
             yield meta
 
             eos_ids = self._eos_ids()
-            past = None
+            state = GenerationState()
             cur = input_ids
             generated_ids: list[int] = []
-            positions_done = 0
             drafts_accepted = 0
             draft_batches = 0
-
-            def trim_cache(past_ckv, keep: int):
-                """Keep only the last ``keep`` positions of a KV cache."""
-                if past_ckv is None:
-                    return past_ckv
-                if isinstance(past_ckv, DynamicCache) and past_ckv.key_cache:
-                    nk = int(past_ckv.key_cache[0].shape[-2])
-                    if nk <= keep:
-                        return past_ckv
-                    dyn = DynamicCache()
-                    dyn.key_cache = [t[..., -keep:, :] for t in past_ckv.key_cache]
-                    dyn.value_cache = [t[..., -keep:, :] for t in past_ckv.value_cache]
-                    dyn._seen_tokens = keep
-                    return dyn
-                if (
-                    isinstance(past_ckv, tuple)
-                    and past_ckv
-                    and isinstance(past_ckv[0], tuple)
-                ):
-                    return tuple(
-                        tuple(v[..., -keep:, :] if v is not None else v for v in t)
-                        for t in past_ckv
-                    )
-                return past_ckv
 
             def emit_frame(step, chosen_id, probs, logits, hidden_states,
                            phase, n_positions, cache_len_in, extra: dict | None = None):
@@ -1134,21 +1176,21 @@ class ModelEngine:
             step = 0
             while step < max_new_tokens:
                 n_positions = int(cur.shape[1])
-                cache_len_in = positions_done
-                phase = "prefill" if past is None else "decode"
+                cache_len_in = state.positions_done
+                phase = "prefill" if state.past_key_values is None else "decode"
 
-                if decoding_mode == "sliding_window" and past is not None and positions_done > window_size:
-                    past = trim_cache(past, window_size)
-                    cache_len_in = positions_done - window_size
+                if decoding_mode == "sliding_window" and state.past_key_values is not None and state.positions_done > window_size:
+                    state.trim_cache(window_size)
+                    cache_len_in = state.positions_done - window_size
 
                 out = self.model(
                     input_ids=cur,
-                    past_key_values=past,
+                    past_key_values=state.past_key_values,
                     use_cache=True,
                     output_hidden_states=True,
                 )
-                past = out.past_key_values
-                positions_done += n_positions
+                state.past_key_values = out.past_key_values
+                state.positions_done += n_positions
 
                 logits = out.logits[:, -1, :]
                 probs = logits.softmax(-1)
@@ -1168,12 +1210,17 @@ class ModelEngine:
                     draft_tokens = torch.tensor([draft_seq], device=self.device)
                     vout = self.model(
                         input_ids=draft_tokens,
-                        past_key_values=past,
+                        past_key_values=state.past_key_values,
                         use_cache=True,
                         output_hidden_states=True,
                     )
                     vlogits = vout.logits  # [1, gamma, vocab]
                     vprobs = vlogits.softmax(-1)
+
+                    # Update KV cache state with verification output, then roll
+                    # back unaccepted draft token cache entries.
+                    state.past_key_values = vout.past_key_values
+                    state.positions_done += draft_gamma
 
                     # Acceptance prefix. Draft token 0 is checked against the
                     # pre-draft decode distribution; draft token g (>=1) against
@@ -1189,6 +1236,9 @@ class ModelEngine:
                             else:
                                 break
                     drafts_accepted += k
+
+                    # Roll back KV cache to discard unaccepted draft tokens
+                    state.rollback_speculative_drafts(k, draft_gamma)
 
                     # Tokens to emit this step: k accepted drafts + 1 target
                     # continuation token (the model's own greedy next token).
@@ -1225,8 +1275,6 @@ class ModelEngine:
                         cache_len_in += 1
                         if cid in eos_ids:
                             break
-                    past = vout.past_key_values
-                    positions_done += len(emit_ids)
                     chosen_id = generated_ids[-1]
                     if chosen_id in eos_ids:
                         break
