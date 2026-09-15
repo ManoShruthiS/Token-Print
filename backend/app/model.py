@@ -708,7 +708,9 @@ class ModelEngine:
         if image.startswith(("http://", "https://")):
             import urllib.request
 
-            from app.hf_guard import _NoRedirect  # prevents SSRF via redirect chains (#271)
+            from app.hf_guard import (
+                _NoRedirect,  # prevents SSRF via redirect chains (#271)
+            )
 
             _MAX_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MB cap — prevents OOM from giant responses
             ModelEngine._validate_url_ssrf(image)
