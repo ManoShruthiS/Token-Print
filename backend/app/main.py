@@ -462,7 +462,7 @@ def hf_inspect(model_id: str) -> HFInspectResponse:
             # Other HTTP errors: fall through to the generic handler below.
 
         # 2. Fetch config.json
-        config_url = "https://huggingface.co/" + urllib.parse.quote(model_id, safe="/") + "/raw/main/config.json"
+        config_url = "https://huggingface.co/" + urllib.parse.quote(model_id, safe="/") + "/raw/" + urllib.parse.quote(revision, safe="") + "/config.json"
         try:
             with safe_urlopen(config_url) as resp:
                 if resp.status != 200:
