@@ -202,9 +202,16 @@ export async function downloadTrace(): Promise<boolean> {
  * into a validated Trace object.  Sends the raw JSON to the backend for
  * validation, or parses it client-side if the backend is unreachable.
  */
-export async function loadTraceFile(file: File): Promise<Trace> {
-  const text = await file.text();
-  const raw = JSON.parse(text);
+export async function loadTraceFile(file: File | Trace | string): Promise<Trace> {
+  let raw: unknown;
+  if (typeof file === "string") {
+    raw = JSON.parse(file);
+  } else if (file && typeof file === "object" && "text" in file && typeof (file as File).text === "function") {
+    const text = await (file as File).text();
+    raw = JSON.parse(text);
+  } else {
+    raw = file;
+  }
   // Try backend validation first.
   try {
     const res = await fetch(`${API_URL}/trace/replay`, {
@@ -217,11 +224,12 @@ export async function loadTraceFile(file: File): Promise<Trace> {
     // Backend unavailable — fall through to client-side validation.
   }
   // Client-side fallback: basic shape check.
+  const r = raw as Record<string, unknown>;
   if (
-    typeof raw.trace_version !== "number" ||
-    raw.trace_version < 1 ||
-    !raw.meta ||
-    !Array.isArray(raw.frames)
+    typeof r.trace_version !== "number" ||
+    r.trace_version < 1 ||
+    !r.meta ||
+    !Array.isArray(r.frames)
   ) {
     throw new Error("Invalid trace file: missing required fields");
   }
